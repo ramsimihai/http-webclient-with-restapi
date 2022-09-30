@@ -1,0 +1,151 @@
+321CA - Mihai Daniel Soare
+Communications Protocols
+
+Homework 3 - Web Client. Communications with REST API.
+
+warning: i hate uppercases so i wont use them too much
+
+May 2022
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Server
+    - the server is already implemented and it is a simulation of a library.
+
+* Client
+    - the program is an implementation of a Client that interacts with a Web Server through
+    REST API, having different types of commands that are allowed.
+
+- a client can do the following commands:
+
+    - register with an username and password;
+    - login with an username and password;
+    - enter the library after being logged in to access the library facilitations;
+    - show the books that are stored in the library;
+    - show a specific book that is stored in the library;
+    - delete a specific book that is stored in the library;
+    - logout from the current account;
+    - exit the application.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Flow of the program
+
+`client.c`
+
+    - the client starts by waiting commands from stdin until exiting the application;
+    - any time a new command is given from the stdin, a new TCP connection is secured between
+    the client and the server;
+    - then for every command do the corresponding task;
+    - after doing the task, the socket is closed;
+    - also, the status of logging and token authorization is kept up to date;
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+__Commands__
+
+(1) register [username] [password] - register a new account to the server
+
+- checks if there is an user already logged in;
+- no user logged in => checks that credentials could be used to create a new account;
+
+the registration request goes like:
+- parsing of the input into JSON object
+- compute a post request to send it to the server route "/api/v1/tema/auth/register"
+- gets the response from the server
+- parses the error code
+- prints to user a message that confirms the error code
+
+(2) login [username] [password] - log in with an already created account;
+
+- checks if there is an user already logged in;
+- no user logged in => try to log in with the credentials given;
+- also, restarts the jwt token from another session;
+
+the login request goes like:
+- parsing of the input into JSON object
+- compute a post request to send it to the server route "/api/v1/tema/auth/login"
+- gets the response from the server
+- parses the error code
+- prints to user a message that confirms the error code
+- if the login was successful, store the cookie that is going to be used for entering the
+library for that user;
+
+(3) enter_library - enter the library and gets an authorization token (jwt);
+
+- checks if there is not already a jwt token given for that user
+
+the get_access request goes like:
+- compute a get request to get the jwt to the server route "/api/v1/tema/library/access"
+- gets the response from the server
+- parses the error code
+- then parses the string given in JSON format from the server
+- if the access was permitted the jwt is stored for later purposes
+- otherwise print an error message
+
+(4) get_books - get all the books that are stored in the library for that user;
+
+the get_books request goes like:
+- compute a get request to get the list of books from the server route "/api/v1/tema/library/books"
+with a token of authorization
+- gets the response from the server 
+- parses the error code
+- if the action was successful, gets to the starting point of the JSON array gotten from the server
+- checks if there is no book and prints a message of that
+- otherwise shows every book in the library in a pretty JSON format :d
+- if the action was unsuccesful, there will be a JSON object parsing of the data, will get the
+type of the error from the actual server and print a nice error message to user;
+
+(5) add_book [title] [author] [genre] [publisher] [page_count] - adds a book into the library
+
+- checks if the page_count is a number
+
+the add_book request goes like:
+- parsing the input into a JSON object
+- compute a post request to the server route "/api/v1/tema/library/books" with a specific
+"application/json" format with the input gotten;
+- receive from server a response;
+- parses the error code;
+- shows specific message after the error code type;
+
+** A problem here is that in the homework pdf there was some misleading information, like in what
+order do you read the data from the stdin, also in what order do you print it when you show a book;
+
+(6) get_book [id] - gets a book info from the library;
+
+- checks if the id is a number;
+
+the get_book request goes like:
+- some string manipulation to get the corresponding url to the id of the book;
+- computing and sending a get request with authorization token to the server
+- receive something from it;
+- parsing response and get the value of the book of the corresponding id if that book is in the
+library
+- otherwise show pretty error
+
+(7) delete_book [id] - deletes a book from the library;
+
+- more or less is the same as get_book, only that instead of a get request there will be a delete request
+that has the authorization token, and after getting a response from the server checks if it
+succeeded or not
+
+(8) logout - logout from the server;
+
+the logout request goes like:
+- computing a get request with the cookie of authorization to logout from the current logged in user
+- shows an error message after parsing the output;
+
+- after the procces of logout the states (is_logged, got_jwt) will be restarted
+
+(9) exit - closes everything;
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Feedback
+
+- less than 24h worked on this homework, interesting approach.
+- liked the new concepts of JSON in C (first time);
+- didnt like that we do not have a checker, thats not pretty cool of you;
+- didnt like that some of the things explained in the pdf were sloppy and you had to ask to get
+what approach we should take on that (double check if logged in before register, and others);
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
